@@ -1,8 +1,12 @@
-from datetime import datetime  # ✅ CORRECT import
+import json
+from datetime import date
+from datetime import datetime 
+from rest_framework import status
+from .models import Habit, CheckIn
+from datetime import timedelta, date
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User 
-import json
 from django.contrib.auth import authenticate
 from habitapi.serializers import HabitSerializer
 from rest_framework.decorators import api_view, permission_classes
@@ -11,6 +15,28 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NO
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny,IsAuthenticated
 
+
+
+
+
+
+from collections import defaultdict
+from .models import Habit, CheckIn
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from datetime import date
+from .models import Habit, CheckIn
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+
+
+
+#signup
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes((AllowAny,))
@@ -37,7 +63,7 @@ def signup_api(request):
 
 
 
-
+#login
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes((AllowAny,))
@@ -54,7 +80,7 @@ def login(request):
     token, _ = Token.objects.get_or_create(user=user)
     return Response({'token': token.key},status=HTTP_200_OK)
 
-
+#add
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_habit_api(request):
@@ -87,6 +113,7 @@ def add_habit_api(request):
 
     return JsonResponse({'error': 'Only POST method allowed.'}, status=405)
 
+#dashboard
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_user_habits(request):
@@ -95,8 +122,7 @@ def list_user_habits(request):
     return Response(serializer.data)
 
 
-
-from datetime import datetime
+#edit
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def edit_habit_api(request, habit_id):
@@ -125,7 +151,7 @@ def edit_habit_api(request, habit_id):
     except Exception as e:
         return Response({'error': str(e)}, status=HTTP_400_BAD_REQUEST)
     
-
+#delete
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_habit_api(request, habit_id):
@@ -138,14 +164,7 @@ def delete_habit_api(request, habit_id):
     except Exception as e:
         return Response({'error': str(e)}, status=HTTP_400_BAD_REQUEST)
     
-
-from datetime import date
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from .models import Habit, CheckIn
-
+#togglebutton
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ontoggle(request):
@@ -159,7 +178,7 @@ def ontoggle(request):
 
     today = date.today()
 
-    # ❗ Check if habit's start date is in the future
+    # chcking habit's start date
     if habit.start_date > today:
         return Response(
             {'error': 'Habit tracking cannot start before the start date.'},
@@ -168,12 +187,10 @@ def ontoggle(request):
 
     try:
         checkin = CheckIn.objects.get(habit=habit, user=user, date=today)
-        # Toggle off: Check-in exists, delete it
         checkin.delete()
         return Response({'status': 'unchecked'}, status=status.HTTP_200_OK)
 
     except CheckIn.DoesNotExist:
-        # Toggle on: Check-in doesn't exist, create it
         checkin = CheckIn.objects.create(habit=habit, user=user, date=today)
         return Response({
             'status': 'checked',
@@ -183,14 +200,7 @@ def ontoggle(request):
             'date': checkin.date
         }, status=status.HTTP_200_OK)
 
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from datetime import timedelta, date
-from collections import defaultdict
-from .models import Habit, CheckIn
-
+#analytics
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def analytics_view(request):
@@ -246,14 +256,8 @@ def analytics_view(request):
     return Response(result)
 
 
-# views.py
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from datetime import date
-from .models import Habit, CheckIn
 
+#addnote
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_or_update_note(request, habit_id):
@@ -291,12 +295,7 @@ def add_or_update_note(request, habit_id):
         'note': checkin.note,
     }, status=status.HTTP_200_OK)
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-
+#logout
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
